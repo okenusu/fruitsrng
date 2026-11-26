@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>フルーツRNG</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:sans-serif;height:100vh;overflow:hidden;display:flex;justify-content:center;align-items:center;background:linear-gradient(#4facfe 0%,#a1c4fd 55%,#7bed9f 55%,#2ed573 100%);position:relative}
+  #dark{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+  .sun{position:absolute;top:40px;right:60px;width:80px;height:80px;background:#ffeaa7;border-radius:50%;box-shadow:0 0 40px #fdcb6e}
+  #ntc{position:absolute;top:20px;left:50%;transform:translateX(-50%);background:#ff4757;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:bold;display:none;z-index:30}
+  .top-r{position:absolute;top:20px;right:20px;display:flex;gap:8px;align-items:center;z-index:10}
+  #mon{background:#fff;padding:10px 18px;border-radius:50px;font-size:18px;font-weight:bold;border:3px solid #ffa502}
+  .t-btn{border:none;padding:10px 13px;border-radius:20px;font-size:12px;font-weight:bold;cursor:pointer;color:#fff}
+  #expBtn{background:#1e90ff}#outBtn{background:#ff4757}
+  #liveBox{position:absolute;right:20px;top:75px;width:240px;max-height:310px;background:rgba(255,255,255,.92);border:3px solid #9c88ff;border-radius:16px;padding:12px;box-shadow:0 6px 16px rgba(0,0,0,.15);z-index:10;display:flex;flex-direction:column}
+  #liveBox h4{font-size:13px;color:#2f3542;border-bottom:2px solid #f1f2f6;padding-bottom:6px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+  .dot{width:8px;height:8px;background:#ff4757;border-radius:50%;display:inline-block}
+  #liveList{overflow-y:auto;display:flex;flex-direction:column;gap:6px;font-size:11px}
+  .l-item{background:#f8f9fa;padding:6px 8px;border-radius:8px;border-left:4px solid #ff4757;line-height:1.3}
+  .menu{position:absolute;left:25px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:10}
+  .btn{padding:12px 16px;font-size:15px;font-weight:bold;border-radius:12px;cursor:pointer;text-align:center;box-shadow:0 4px 8px rgba(0,0,0,.15)}
+  #sBtn{background:#ffa502;color:#fff;border:3px solid #e67e22}#sBtn small{display:block;font-size:11px;margin-top:2px}
+  #iBtn{background:#fff;border:3px solid #2ed573}#tBtn{background:#ffeaa7;color:#d35400;border:3px solid #f39c12}
+  #admBtn{display:none;background:#2f3542;color:#ffeaa7;border:3px solid #ffa502}
+  .stg{display:flex;flex-direction:column;align-items:center;z-index:5}
+  #box{width:280px;height:295px;background:rgba(255,255,255,.92);border-radius:24px;display:flex;flex-direction:column;justify-content:center;align-items:center;margin-bottom:25px;padding:15px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.15);border:4px solid #fff}
+  #ico{font-size:90px;line-height:1.1;margin-bottom:6px}#mut{font-size:14px;font-weight:bold;min-height:18px}#nam{font-size:21px;font-weight:bold}#rar{font-size:15px;font-weight:bold;margin-top:3px;min-height:19px}#prb{font-size:13px;font-weight:bold;color:#57606f;margin-top:2px;min-height:17px}
+  #rBtn{font-size:22px;font-weight:bold;padding:14px 45px;cursor:pointer;background:#ff6b81;color:#fff;border:none;border-radius:50px;box-shadow:0 5px 0 #ff4757}#rBtn:disabled{background:#a4b0be;box-shadow:0 5px 0 #747d8c}
+  #aBtn{display:none;margin-top:12px;font-size:16px;font-weight:bold;padding:10px 26px;cursor:pointer;background:#1e90ff;color:#fff;border:none;border-radius:30px;box-shadow:0 4px 0 #0984e3}#aBtn.on{background:#ff4757;box-shadow:0 4px 0 #c0392b}
+  .mod{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:50}
+  .mbox{background:#fff;width:92%;max-width:480px;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto}
+  .mhd{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:8px;margin-bottom:12px}
+  .cbtn{background:#ff4757;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer}
+  #grd{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .slt{position:relative;aspect-ratio:1/1;background:#f8f9fa;border:3px solid #ddd;border-radius:10px;display:flex;justify-content:center;align-items:center}
+  .snm{position:absolute;top:5px;left:6px;right:6px;font-size:10px;font-weight:bold;line-height:1.2}.sic{font-size:40px}.scn{position:absolute;bottom:5px;right:6px;font-size:11px;font-weight:bold;color:#555}
+  .srow{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee}
+  .srow button{padding:6px 10px;font-size:12px;font-weight:bold;border:none;border-radius:6px;cursor:pointer;color:#fff;margin-left:4px;background:#2ed573}.srow button:last-child{background:#ffa502}
+  #hx{position:relative;width:380px;height:360px;margin:0 auto;background:#fff9e6;border-radius:14px;border:2px solid #f39c12}
+  .hex{position:absolute;width:74px;height:82px;transform:translate(-50%,-50%);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-size:10px;font-weight:bold;cursor:pointer}
+  .lk{background:#dfe4ea;color:#a4b0be;cursor:not-allowed}.av{background:#ffeaa7;color:#d35400}.bt{background:#2ed573;color:#fff}
+  .l-box{background:#fff;padding:26px;border-radius:20px;width:90%;max-width:360px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .l-box input,.l-box textarea,.adm-row input{width:100%;padding:10px;margin:5px 0;border:2px solid #dfe4ea;border-radius:10px;font-size:14px}
+  .l-btns{display:flex;gap:8px;margin-top:8px}.l-btns button{flex:1;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:bold;color:#fff;cursor:pointer;background:#2ed573}.l-btns button:last-child{background:#1e90ff}
+  .imp-btn{width:100%;margin-top:10px;padding:10px;border:2px dashed #1e90ff;background:#f1f8ff;color:#1e90ff;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer}
+  #lErr{color:#ff4757;font-size:13px;font-weight:bold;margin-top:8px;min-height:18px}
+  .adm-row{margin-bottom:10px;font-size:13px;font-weight:bold;color:#2f3542}
+  .Common{color:#747d8c;border-color:#ced6e0}.Uncommon{color:#2ed573;border-color:#2ed573}.Rare{color:#1e90ff;border-color:#1e90ff}.Epic{color:#9c88ff;border-color:#9c88ff}.Legendary{color:#ffa502;border-color:#ffa502}.Mythic{color:#ff4757;border-color:#ff4757}.Secret{color:#00b894;border-color:#00b894}
+  .m-Gold{background:linear-gradient(135deg,#fff,#fff6cc)!important;box-shadow:0 0 12px rgba(255,195,18,.6)!important;border-color:#f1c40f!important}
+  .m-Diamond{background:linear-gradient(135deg,#fff,#dff9fb)!important;box-shadow:0 0 14px rgba(0,210,211,.7)!important;border-color:#00d2d3!important}
+  @keyframes rb{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+  .m-Rainbow{background:linear-gradient(135deg,#ffeaa7,#ffcccc,#d6a2e8,#7ed6df)!important;border-color:#ff6b81!important;box-shadow:0 0 18px rgba(255,107,129,.8)!important;animation:rb 2s linear infinite}
+</style>
+</head>
+<body>
+<div id="dark"></div><div class="sun"></div><div id="ntc">⚠️ 維持費不足のため自動売却しました！</div>
+<div class="top-r"><div id="mon">💰 <span id="mv">100</span> G</div><button id="expBtn" class="t-btn" onclick="openExp()">📋 引き継ぎ</button><button id="outBtn" class="t-btn" onclick="logout()">🚪 ログアウト</button></div>
+
+<div id="liveBox">
+  <h4><span class="dot"></span> ライブスポーン (Mythic+)</h4>
+  <div id="liveList"><div style="color:#a4b0be;text-align:center;padding:10px">Mythic以上の出現待機中...</div></div>
+</div>
+
+<div class="menu">
+  <button id="sBtn" class="btn" onclick="op('sMod')">💰 売る<small>更新: <span id="t1">60</span>秒 / 維持費: <span id="fee">0</span>G</small></button>
+  <button id="iBtn" class="btn" onclick="op('iMod')">📦 インベントリ</button>
+  <button id="tBtn" class="btn" onclick="op('tMod')">🌳 スキルツリー</button>
+  <button id="admBtn" class="btn" onclick="openAdm()">🛠️ 管理者設定</button>
+</div>
+<div class="stg">
+  <div id="box"><div id="ico">❓</div><div id="mut"></div><div id="nam">ボタンを押してね</div><div id="rar"></div><div id="prb"></div></div>
+  <button id="rBtn" onclick="roll()">🎲 Roll!</button>
+  <button id="aBtn" onclick="tAuto()">▶️ オート: OFF</button>
+</div>
+<div id="loginMod" class="mod" style="display:flex">
+  <div class="l-box">
+    <h2 style="margin-bottom:10px">🍎 フルーツRNG ログイン</h2>
+    <input id="uIn" placeholder="ユーザー名">
+    <input id="pIn" type="password" placeholder="パスワード">
+    <div class="l-btns"><button onclick="auth(0)">ログイン</button><button onclick="auth(1)">新規作成</button></div>
+    <button class="imp-btn" onclick="impBox.style.display=impBox.style.display==='block'?'none':'block'">📥 引き継ぎコードから復元</button>
+    <div id="impBox" style="display:none;margin-top:8px">
+      <textarea id="impIn" rows="3" placeholder="他の端末でコピーしたコードを貼り付け"></textarea>
+      <button onclick="importCode()" style="width:100%;padding:10px;background:#ffa502;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer">復元してログイン</button>
+    </div>
+    <div id="lErr"></div>
+  </div>
+</div>
+<div id="expMod" class="mod" onclick="if(event.target===this)this.style.display='none'">
+  <div class="mbox"><div class="mhd"><h3>📋 データ引き継ぎコード</h3><button class="cbtn" onclick="expMod.style.display='none'">閉じる</button></div>
+  <p style="font-size:13px;color:#555;margin-bottom:8px">このコードをコピーして別の端末の「引き継ぎコードから復元」に貼り付けると続きから遊べます。</p>
+  <textarea id="expOut" rows="4" readonly style="width:100%;padding:10px;border:2px solid #1e90ff;border-radius:8px;font-size:12px"></textarea>
+  <button onclick="copyExp()" style="width:100%;margin-top:8px;padding:10px;background:#1e90ff;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer">📋 コードをコピー</button></div>
+</div>
+<div id="admMod" class="mod" onclick="if(event.target===this)this.style.display='none'">
+  <div class="mbox"><div class="mhd"><h3>🛠️ 管理者設定 (okenusi専用)</h3><button class="cbtn" onclick="admMod.style.display='none'">閉じる</button></div>
+  <div class="adm-row">⚡ ロール時間（秒）※小さいほど速い (例: 0.05)<input id="aSpd" type="number" step="0.05" min="0.01"></div>
+  <div class="adm-row">🍀 運気倍率（倍）(例: 1000000)<input id="aLck" type="number" step="0.5" min="0.1"></div>
+  <div class="adm-row">✨ 変異確率倍率（倍）(例: 50)<input id="aMut" type="number" step="0.5" min="0.1"></div>
+  <div class="l-btns"><button onclick="saveAdm()">適用する</button><button onclick="resetAdm()">通常値に戻す</button></div></div>
+</div>
+<div id="iMod" class="mod" onclick="if(event.target===this)this.style.display='none'"><div class="mbox"><div class="mhd"><h3>🍎 <span id="uTitle"></span>のインベントリ</h3><button class="cbtn" onclick="iMod.style.display='none'">閉じる</button></div><div id="grd"></div></div></div>
+<div id="sMod" class="mod" onclick="if(event.target===this)this.style.display='none'"><div class="mbox"><div class="mhd"><h3>💰 売却 (更新: <span id="t2">60</span>秒)</h3><button class="cbtn" onclick="sMod.style.display='none'">閉じる</button></div><div id="slst"></div></div></div>
+<div id="tMod" class="mod" onclick="if(event.target===this)this.style.display='none'"><div class="mbox"><div class="mhd"><h3>🌳 スキル (<span id="st">速2.0秒/運1.0倍/変1.0倍</span>)</h3><button class="cbtn" onclick="tMod.style.display='none'">閉じる</button></div><div id="hx"></div></div></div>
+><script src="https://gstatic.com"></script>
+<script src="https://gstatic.com"></script>
+<script>
+const DB_URL = "https://firebaseio.com";
+let liveRef = null;
+try {
+  firebase.initializeApp({ databaseURL: DB_URL });
+  liveRef = firebase.database().ref("live");
+  liveRef.limitToLast(15).on("value", snap => {
+    let val = snap.val();
+    if (val) { logs = Object.values(val).reverse(); renderLive(); }
+  }, err => {
+    liveList.innerHTML = `<div style="color:#ff4757;padding:6px">⚠️ SDKエラー: ${err.message}</div>` + liveList.innerHTML;
+  });
+} catch (e) {}
+
+const F=[
+  {n:"リンゴ",i:"🍎",r:"Common",c:2,p:10},{n:"ブルーベリー",i:"🫐",r:"Common",c:4,p:18},
+  {n:"チェリー",i:"🍒",r:"Common",c:6,p:24},{n:"バナナ",i:"🍌",r:"Common",c:8,p:30},
+  {n:"ミカン",i:"🍊",r:"Uncommon",c:16,p:55},{n:"キウイ",i:"🥝",r:"Uncommon",c:24,p:70},
+  {n:"ブドウ",i:"🍇",r:"Uncommon",c:32,p:90},{n:"メロン",i:"🍈",r:"Rare",c:80,p:220},
+  {n:"マンゴー",i:"🥭",r:"Rare",c:120,p:320},{n:"イチゴ",i:"🍓",r:"Rare",c:180,p:450},
+  {n:"黄金パイン",i:"🍍",r:"Epic",c:500,p:1000},{n:"スイカ",i:"🍉",r:"Legendary",c:1500,p:2200},
+  {n:"モモ",i:"🍑",r:"Legendary",c:2500,p:3200},{n:"ドラゴンフルーツ",i:"🐉",r:"Mythic",c:5000,p:5000},
+  {n:"青リンゴ",i:"🍏",r:"Secret",c:25000,p:20000},{n:"宇宙スターフルーツ",i:"🌟",r:"Secret",c:100000,p:100000}
+];
+const M=[{id:"",label:"",tag:"",mult:1,chance:1},{id:"Gold",label:"✨ゴールド ",tag:"✨GOLD",mult:3,chance:11},{id:"Diamond",label:"💎ダイヤモンド ",tag:"💎DIAMOND",mult:10,chance:100},{id:"Rainbow",label:"🌈レインボー ",tag:"🌈RAINBOW",mult:50,chance:1000}];
+const N=[
+  {q:0,r:0,t:"🍯コア",cost:30,spd:.1,lck:.1,mut:0,req:-1},{q:0,r:-1,t:"⚡速度1",cost:150,spd:.25,lck:0,mut:0,req:0},{q:1,r:-1,t:"🍀運気1",cost:150,spd:0,lck:.4,mut:0,req:0},
+  {q:0,r:-2,t:"⚡速度2",cost:800,spd:.35,lck:0,mut:0,req:1},{q:2,r:-2,t:"🍀運気2",cost:800,spd:0,lck:.8,mut:0,req:2},{q:1,r:0,t:"⚡速度3",cost:4000,spd:.4,lck:0,mut:0,req:3},
+  {q:0,r:1,t:"🍀運気3",cost:4000,spd:0,lck:1.5,mut:0,req:4},{q:2,r:0,t:"⚡速度4",cost:20000,spd:.4,lck:0,mut:0,req:5},{q:0,r:2,t:"🍀運気4",cost:20000,spd:0,lck:3,mut:0,req:6},
+  {q:2,r:1,t:"⚡神速度",cost:100000,spd:.3,lck:0,mut:0,req:7},{q:1,r:2,t:"🍀神運気",cost:100000,spd:0,lck:5,mut:0,req:8},{q:-1,r:0,t:"🔄オート",cost:500,spd:0,lck:0,mut:0,req:0,auto:1},
+  {q:-1,r:1,t:"✨変異1",cost:300,spd:0,lck:0,mut:.5,req:0},{q:-2,r:2,t:"✨変異2",cost:2000,spd:0,lck:0,mut:.5,req:12},{q:-1,r:2,t:"✨変異3",cost:12000,spd:0,lck:0,mut:.5,req:13},{q:-2,r:3,t:"✨神変異",cost:60000,spd:0,lck:0,mut:1.0,req:14}
+];
+let curUser=null,inv={},cp={},cm={},bt=new Set(),logs=[],mon=100,rol=0,auto=0,sec=60,ov={spd:null,lck:null,mut:null};
+const getDB=()=>JSON.parse(localStorage.getItem("frng_users")||"{}");
+function save(){if(!curUser)return;let db=getDB();db[curUser].data={inv,mon,bt:[...bt],ov};localStorage.setItem("frng_users",JSON.stringify(db))}
+function addLive(user,f,m){
+  let item={user,icon:f.i,name:m.label+f.n,rar:f.r,ch:(f.c*m.chance).toLocaleString(),tm:new Date().toTimeString().slice(0,5)};
+  logs.unshift(item);if(logs.length>15)logs.pop();renderLive();
+  if(liveRef){liveRef.push(item).catch(e=>{liveList.innerHTML=`<div style="color:#ff4757;padding:6px">⚠️ 送信エラー: ${e.message}</div>`+liveList.innerHTML})}
+}
+function renderLive(){if(!logs.length){liveList.innerHTML='<div style="color:#a4b0be;text-align:center;padding:10px">Mythic以上の出現待機中...</div>';return}liveList.innerHTML=logs.map(l=>`<div class="l-item ${l.rar}"><b>${l.user}</b> <span style="color:#888;font-size:10px">${l.tm}</span><br>${l.icon} <b>${l.name}</b> <span style="color:#555">(1 in ${l.ch})</span></div>`).join("")}
+function startSession(u,db){curUser=u;let d=db[u].data;inv=d.inv||{};mon=d.mon??100;bt=new Set(d.bt||[]);ov=d.ov||{spd:null,lck:null,mut:null};uTitle.textContent=u;admBtn.style.display=u==="okenusi"?"block":"none";aBtn.style.display=(u==="okenusi"||N.some((n,i)=>n.auto&&bt.has(i)))?"inline-block":"none";lErr.textContent="";loginMod.style.display="none";newP(0)}
+function auth(isNew){let u=uIn.value.trim(),p=pIn.value.trim();if(!u||!p){lErr.textContent="名前とパスワードを入力してください";return}let db=getDB();if(isNew){if(db[u]){lErr.textContent="その名前は既に使われています";return}db[u]={pw:p,data:{inv:{},mon:100,bt:[],ov:{spd:null,lck:null,mut:null}}};localStorage.setItem("frng_users",JSON.stringify(db))}else{if(!db[u]||db[u].pw!==p){lErr.textContent="名前またはパスワードが違います";return}}startSession(u,db)}
+function openExp(){if(!curUser)return;save();let db=getDB(),payload=JSON.stringify({u:curUser,acc:db[curUser]});expOut.value=btoa(unescape(encodeURIComponent(payload)));expMod.style.display="flex"}
+function copyExp(){expOut.select();document.execCommand("copy");alert("引き継ぎコードをコピーしました！")}
+function importCode(){try{let raw=decodeURIComponent(escape(atob(impIn.value.trim()))),obj=JSON.parse(raw);if(!obj.u||!obj.acc)throw 0;let db=getDB();db[obj.u]=obj.acc;localStorage.setItem("frng_users",JSON.stringify(db));impIn.value="";impBox.style.display="none";startSession(obj.u,db)}catch(e){lErr.textContent="無効な引き継ぎコードです"}}
+function logout(){auto=0;aBtn.textContent="▶️ オート: OFF";aBtn.className="";curUser=null;uIn.value=pIn.value="";admBtn.style.display="none";loginMod.style.display="flex"}
+const baseSpd=()=>Math.max(.2,+(2-N.filter((_,i)=>bt.has(i)).reduce((s,n)=>s+n.spd,0)).toFixed(2)),baseLck=()=>+(1+N.filter((_,i)=>bt.has(i)).reduce((s,n)=>s+n.lck,0)).toFixed(1),baseMut=()=>+(1+N.filter((_,i)=>bt.has(i)).reduce((s,n)=>s+n.mut,0)).toFixed(1);
+const getSpd=()=>curUser==="okenusi"&&ov.spd!==null?ov.spd:baseSpd(),getLck=()=>curUser==="okenusi"&&ov.lck!==null?ov.lck:baseLck(),getMut=()=>curUser==="okenusi"&&ov.mut!==null?ov.mut:baseMut();
+function openAdm(){if(curUser!=="okenusi")return;aSpd.value=getSpd();aLck.value=getLck();aMut.value=getMut();admMod.style.display="flex"}
+function saveAdm(){if(curUser!=="okenusi")return;ov.spd=Math.max(.01,+aSpd.value||.2);ov.lck=Math.max(.1,+aLck.value||1);ov.mut=Math.max(.1,+aMut.value||1);save();ui();admMod.style.display="none"}
+function resetAdm(){ov={spd:null,lck:null,mut:null};save();ui();admMod.style.display="none"}
+const key=(f,m)=>m.id?`${m.id}:${f.n}`:f.n,getPrice=(f,m)=>Math.max(1,Math.round(cp[f.n]*m.mult));
+function calcFee(){let s=0;F.forEach(f=>M.forEach(m=>{s+=Math.floor((f.p*m.mult)/10)*(inv[key(f,m)]||0)}));return s}
+function newP(ch){if(ch&&curUser){mon-=calcFee();if(mon<0){let ok=0;for(const m of M)for(const f of F)while(mon<0&&(inv[key(f,m)]||0)>0){inv[key(f,m)]--;mon+=getPrice(f,m);ok=1}if(ok){ntc.style.display="block";setTimeout(()=>ntc.style.display="none",4000)}}save()}F.forEach(f=>{let x=Math.max(.01,+Math.exp((Math.random()<.5?1:-1)*Math.pow(-Math.log(1-Math.random()),1.4)*.35).toFixed(2));cm[f.n]=x;cp[f.n]=Math.max(1,Math.round(f.p*x))});ui()}
+setInterval(()=>{if(!curUser)return;if(--sec<=0){sec=60;newP(1)}t1.textContent=t2.textContent=sec},1000);
+function roll(){
+  if(rol||!curUser)return;rol=1;rBtn.disabled=1;rBtn.textContent="抽選中...";nam.textContent="？？？";mut.textContent=rar.textContent=prb.textContent="";box.className="";
+  let lk=getLck(),w=F.map((f,i)=>Math.pow(lk,i/(F.length-1)*1.4)/f.c),r=Math.random()*w.reduce((a,b)=>a+b,0),won=F.at(0);
+  for(let i=0;i<F.length;i++){if(r<w.at(i)){won=F.at(i);break}r-=w.at(i)}
+  let mr=Math.random(),mm=getMut(),mutObj=mr<.001*mm?M.at(3):mr<.011*mm?M.at(2):mr<.101*mm?M.at(1):M.at(0);
+  let st=Date.now(),dur=getSpd()*1000;
+  (function an(){let el=Date.now()-st;if(el<dur){ico.textContent=F.at(Math.random()*F.length|0).i;setTimeout(an,Math.min(120,20+Math.pow(el/dur,2)*120))}else{if(won.r==="Secret"||mutObj.id==="Rainbow"){dark.style.opacity=".88";setTimeout(()=>dark.style.opacity="0",650)}if(won.r==="Mythic"||won.r==="Secret"||mutObj.id==="Rainbow")addLive(curUser,won,mutObj);let k=key(won,mutObj);inv[k]=(inv[k]||0)+1;save();box.className=mutObj.id?"m-"+mutObj.id:"";mut.textContent=mutObj.tag;mut.style.color=mutObj.id==="Rainbow"?"#ff4757":mutObj.id==="Diamond"?"#00a8ff":"#e67e22";ico.textContent=won.i;nam.textContent=mutObj.label+won.n;rar.textContent=`[${won.r}]`;rar.className=won.r;prb.textContent=`1 in ${(won.c*mutObj.chance).toLocaleString()}`;ui();rBtn.disabled=0;rBtn.textContent="🎲 Roll!";rol=0;if(auto)setTimeout(roll,Math.max(40,getSpd()*200))}})();
+}
+function tAuto(){auto=!auto;aBtn.textContent=auto?"⏹️ ストップ":"▶️ オート: OFF";aBtn.className=auto?"on":"";if(auto&&!rol)roll()}
+function sell(k,fn,mid,all){let c=inv[k]||0;if(c>0){let q=all?c:1,f=F.find(x=>x.n===fn),m=M.find(x=>x.id===mid);inv[k]-=q;mon+=getPrice(f,m)*q;save();ui()}}
+function buy(i){let n=N.at(i);if(!bt.has(i)&&mon>=n.cost&&(n.req<0||bt.has(n.req))){mon-=n.cost;bt.add(i);if(n.auto)aBtn.style.display="inline-block";save();ui()}}
+function ui(){mv.textContent=mon.toLocaleString();fee.textContent=calcFee().toLocaleString();st.textContent=`速${getSpd()}秒/運${getLck()}倍/変${getMut()}倍`;grd.innerHTML=slst.innerHTML=hx.innerHTML="";let has=0;F.forEach(f=>M.forEach(m=>{let k=key(f,m),c=inv[k]||0;if(c>0){has=1;let p=getPrice(f,m);grd.innerHTML+=`<div class="slt ${f.r} ${m.id?'m-'+m.id:''}"><div class="snm">${m.label}${f.n}</div><div class="sic">${f.i}</div><div class="scn">×${c}</div></div>`;slst.innerHTML+=`<div class="srow"><div><b>${f.i} ${m.label}${f.n}</b> (×${c})<br><small style="color:#e67e22;font-weight:bold">1個: ${p.toLocaleString()} G (${cm[f.n]}倍)</small></div><div><button onclick="sell('${k}','${f.n}','${m.id}',0)">1個</button><button onclick="sell('${k}','${f.n}','${m.id}',1)">全部</button></div></div>`}}));if(!has){grd.innerHTML="<p style='grid-column:1/-1;text-align:center;color:#aaa;padding:20px'>なし</p>";slst.innerHTML="<p style='text-align:center;color:#aaa;padding:20px'>売れるフルーツがありません</p>"}N.forEach((n,i)=>{let b=bt.has(i),a=!b&&(n.req<0||bt.has(n.req)),x=190+38*(1.732*n.q+.866*n.r),y=165+38*(1.5*n.r);hx.innerHTML+=`<div class="hex ${b?'bt':a?'av':'lk'}" style="left:${x}px;top:${y}px" onclick="${a?`buy(${i})`:''}"><div>${n.t}</div><div>${b?'解放済':a?n.cost.toLocaleString()+'G':'🔒'}</div></div>`})}
+function op(id){ui();document.getElementById(id).style.display="flex"}
+</script></body></html>
+
